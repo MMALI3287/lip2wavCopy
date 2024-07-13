@@ -1,12 +1,38 @@
 #!/bin/bash
-speaker=$(basename $1)
-mkdir -p "$1/videos/"
-echo "Downloading Train set of $speaker"
-youtube-dl -f best -a $1/train.txt -o $1"/videos/%(id)s.%(ext)s"
-echo "Downloading Val set of $speaker"
-youtube-dl -f best -a $1/val.txt -o $1"/videos/%(id)s.%(ext)s"
-echo "Downloading Test set of $speaker"
-youtube-dl -f best -a $1/test.txt -o $1"/videos/%(id)s.%(ext)s"
+
+# Ensure a directory argument is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <directory>"
+    exit 1
+fi
+
+# Directory containing the text files (train.txt, val.txt, test.txt)
+DIR="$1"
+
+# Function to download videos using youtube-dl
+download_videos() {
+    local input_file="$1"
+    local output_dir="$2"
+    
+    mkdir -p "$output_dir"
+
+    while IFS= read -r video_id; do
+        echo "Downloading video: $video_id"
+        youtube-dl -f best "https://www.youtube.com/watch?v=$video_id" -o "$output_dir/%(id)s.%(ext)s"
+    done < "$input_file"
+}
+
+# Download videos for train.txt
+echo "Downloading Train set"
+download_videos "$DIR/train.txt" "$DIR/videos/train"
+
+# Download videos for val.txt
+echo "Downloading Val set"
+download_videos "$DIR/val.txt" "$DIR/videos/val"
+
+# Download videos for test.txt
+echo "Downloading Test set"
+download_videos "$DIR/test.txt" "$DIR/videos/test"
 
 FILES=$1/videos/*
 DST_DIR=$1/intervals
